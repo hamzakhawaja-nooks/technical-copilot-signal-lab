@@ -9,32 +9,38 @@ const seedDatasets = [
     name: "May–July baseline",
     start: "2026-05-01",
     end: "2026-07-31",
-    totalSearched: 2118,
+    totalSearched: 25440,
+    transcriptsAvailable: 2977,
+    callsAnalyzed: 449,
     quality: "directional",
-    note: "Question census pending · strict punt examples are provisional",
-    aggregate: { knowledgeQuestions: null, puntedQuestions: 7 },
+    qualityNote: "Substantive Nooks2 dialer transcripts analyzed; missing and low-signal records remain excluded.",
+    note: "Nooks2 dialer corpus · 25,440 calls · 2,977 transcripts · 449 substantive conversations analyzed",
+    aggregate: { knowledgeQuestions: 199, puntedQuestions: 4 },
     rows: [
-      ["JP Campbell",2,0,0], ["Harry Morrill",3,0,0], ["Faith Lau",3,2,2],
-      ["Ryan Anderson",1,0,0], ["Bobby Shull",4,1,1], ["Joseph Lewis",1,0,0],
-      ["Taylor Crump",1,0,0], ["Jhan Abad",3,0,0], ["Cobo Alvarez de Toledo",3,2,2],
-      ["Nick Ross",4,2,2]
-    ].map(([user,_legacyCalls,puntedQuestions]) => ({user,knowledgeQuestions:null,puntedQuestions}))
+      ["JP Campbell",40,3], ["Harry Morrill",0,0], ["Faith Lau",55,1],
+      ["Ryan Anderson",38,0], ["Bobby Shull",20,0], ["Joseph Lewis",27,0],
+      ["Taylor Crump",11,0], ["Jhan Abad",7,0], ["Cobo Alvarez de Toledo",1,0],
+      ["Nick Ross",0,0]
+    ].map(([user,knowledgeQuestions,puntedQuestions]) => ({user,knowledgeQuestions,puntedQuestions}))
   },
   {
     id: "sep-2026",
     name: "September follow-up",
     start: "2026-09-01",
     end: "2026-09-15",
-    totalSearched: 355,
+    totalSearched: 1849,
+    transcriptsAvailable: 342,
+    callsAnalyzed: 69,
     quality: "directional",
-    note: "Question census pending · 2 commercial/non-deferrals removed from provisional punts",
-    aggregate: { knowledgeQuestions: null, puntedQuestions: 8 },
+    qualityNote: "Substantive Nooks2 dialer transcripts analyzed; short connects and meeting recordings are outside scope.",
+    note: "Nooks2 dialer corpus · 1,849 calls · 342 transcripts · 69 substantive conversations analyzed",
+    aggregate: { knowledgeQuestions: 52, puntedQuestions: 0 },
     rows: [
-      ["JP Campbell",5,2,2], ["Harry Morrill",5,2,2], ["Faith Lau",5,0,0],
-      ["Ryan Anderson",4,4,3], ["Bobby Shull",0,0,0], ["Joseph Lewis",0,0,0],
-      ["Taylor Crump",0,0,0], ["Jhan Abad",1,0,0], ["Cobo Alvarez de Toledo",2,0,0],
-      ["Nick Ross",2,0,0]
-    ].map(([user,_legacyCalls,puntedQuestions]) => ({user,knowledgeQuestions:null,puntedQuestions}))
+      ["JP Campbell",1,0], ["Harry Morrill",1,0], ["Faith Lau",0,0],
+      ["Ryan Anderson",0,0], ["Bobby Shull",7,0], ["Joseph Lewis",37,0],
+      ["Taylor Crump",4,0], ["Jhan Abad",1,0], ["Cobo Alvarez de Toledo",0,0],
+      ["Nick Ross",0,0]
+    ].map(([user,knowledgeQuestions,puntedQuestions]) => ({user,knowledgeQuestions,puntedQuestions}))
   }
 ];
 
@@ -74,8 +80,6 @@ function shortPeriod(dataset) {
 function rate(row) { return Number.isFinite(row.knowledgeQuestions) && row.knowledgeQuestions > 0 ? row.puntedQuestions / row.knowledgeQuestions : null; }
 function answeredShare(row) { const value = rate(row); return value === null ? null : 1 - value; }
 function pct(value) { return value === null ? "—" : `${(value * 100).toFixed(1)}%`; }
-function number(value, digits = 2) { return Number(value || 0).toFixed(digits); }
-
 function init() {
   populateDatasetOptions();
   renderUsers();
@@ -163,8 +167,10 @@ function render() {
   $("questionMomentsValue").textContent = aggregate.knowledgeQuestions === null ? "—" : aggregate.knowledgeQuestions.toLocaleString();
   $("puntMomentsValue").textContent = aggregate.puntedQuestions.toLocaleString();
   $("answeredShareValue").innerHTML = answeredShare(aggregate) === null ? "—" : `${(answeredShare(aggregate)*100).toFixed(1)}<span>%</span>`;
-  $("questionMomentsFoot").textContent = `across ${activeDataset.totalSearched.toLocaleString()} calls searched`;
-  $("puntedQuestionsFoot").textContent = "Strict later-answer rule · provisional";
+  $("questionMomentsFoot").textContent = activeDataset.callsAnalyzed
+    ? `${activeDataset.callsAnalyzed.toLocaleString()} analyzed · ${activeDataset.transcriptsAvailable.toLocaleString()} transcribed`
+    : `across ${activeDataset.totalSearched.toLocaleString()} records searched`;
+  $("puntedQuestionsFoot").textContent = "Strict later-answer rule";
   $("rateDelta").textContent = delta === null ? "Awaiting question census" : `${delta <= 0 ? "↓" : "↑"} ${Math.abs(delta*100).toFixed(1)} pp vs ${shortPeriod(compare)}`;
 
   const maxRate = Math.max(.1, ...rows.map(row => rate(row) || 0), ...rows.map(row => rate(compareRows.get(row.user) || {knowledgeQuestions:null,puntedQuestions:0}) || 0)) * 1.08;
@@ -200,12 +206,12 @@ function renderQuality() {
   } else if (activeDataset.quality === "reviewed") {
     banner.className = "quality-banner good";
     banner.querySelector("strong").textContent = "Reviewed result";
-    banner.querySelector("p").textContent = "This imported dataset is marked as call-level reviewed.";
+    banner.querySelector("p").textContent = activeDataset.qualityNote || "Every eligible transcript in this result was reviewed.";
     banner.querySelector(".quality-symbol").textContent = "✓";
   } else {
     banner.className = "quality-banner warning";
-    banner.querySelector("strong").textContent = "Directional result";
-    banner.querySelector("p").textContent = "Provisional punts are shown, but Gong has not produced an exhaustive question-moment denominator.";
+    banner.querySelector("strong").textContent = "Directional Nooks2 result";
+    banner.querySelector("p").textContent = activeDataset.qualityNote || "Rates reflect analyzed substantive transcripts; see coverage details for exclusions.";
     banner.querySelector(".quality-symbol").textContent = "!";
   }
 }
@@ -247,8 +253,8 @@ function runEvaluation() {
 
 function exportCsv() {
   const rows = filteredRows(activeDataset);
-  const header = ["dataset_name","start_date","end_date","total_calls_searched","user","knowledge_question_moments","punted_question_moments","punt_percentage","quality"];
-  const data = rows.map(row => [activeDataset.name,activeDataset.start,activeDataset.end,activeDataset.totalSearched,row.user,row.knowledgeQuestions ?? "",row.puntedQuestions,rate(row) === null ? "" : (rate(row)*100).toFixed(1),activeDataset.quality]);
+  const header = ["dataset_name","start_date","end_date","total_calls_searched","calls_with_transcripts","calls_analyzed","user","knowledge_question_moments","punted_question_moments","punt_percentage","quality"];
+  const data = rows.map(row => [activeDataset.name,activeDataset.start,activeDataset.end,activeDataset.totalSearched,activeDataset.transcriptsAvailable || "",activeDataset.callsAnalyzed || "",row.user,row.knowledgeQuestions ?? "",row.puntedQuestions,rate(row) === null ? "" : (rate(row)*100).toFixed(1),activeDataset.quality]);
   const csv = [header,...data].map(line => line.map(value => `"${String(value).replaceAll('"','""')}"`).join(",")).join("\n");
   download(`${activeDataset.id}.csv`, csv, "text/csv");
   toast("CSV exported");
@@ -289,7 +295,10 @@ function normalizeDataset(raw) {
   const computed = rows.reduce((a,r) => ({knowledgeQuestions:a.knowledgeQuestions === null || r.knowledgeQuestions === null ? null : a.knowledgeQuestions+r.knowledgeQuestions,puntedQuestions:a.puntedQuestions+r.puntedQuestions}), {knowledgeQuestions:0,puntedQuestions:0});
   return {
     id: raw.id || `import-${Date.now()}`, name: raw.name || "Imported evaluation", start: raw.start, end: raw.end,
-    totalSearched: Number(raw.totalSearched ?? raw.total_calls_searched ?? raw.total_searched ?? 0), quality: raw.quality || "reviewed",
+    totalSearched: Number(raw.totalSearched ?? raw.total_calls_searched ?? raw.total_searched ?? 0),
+    transcriptsAvailable: Number(raw.transcriptsAvailable ?? raw.calls_with_transcripts ?? 0),
+    callsAnalyzed: Number(raw.callsAnalyzed ?? raw.calls_analyzed ?? 0),
+    quality: raw.quality || "reviewed", qualityNote: raw.qualityNote || raw.quality_note || "",
     note: raw.note || "Imported locally · no transcript content leaves this browser", aggregate: raw.aggregate || computed, rows
   };
 }
@@ -314,7 +323,8 @@ function datasetFromCsv(text, filename) {
   const first = objects[0];
   return normalizeDataset({
     id:`import-${Date.now()}`, name:first.dataset_name || filename.replace(/\.csv$/i,""), start:first.start_date, end:first.end_date,
-    totalSearched:first.total_calls_searched || first.total_searched, quality:first.quality || "reviewed",
+    totalSearched:first.total_calls_searched || first.total_searched, calls_with_transcripts:first.calls_with_transcripts,
+    calls_analyzed:first.calls_analyzed, quality:first.quality || "reviewed",
     rows:objects.map(row => ({user:row.user,knowledge_question_moments:row.knowledge_question_moments,punted_question_moments:row.punted_question_moments}))
   });
 }

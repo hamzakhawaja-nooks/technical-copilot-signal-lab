@@ -92,8 +92,8 @@
         <button id="runButton" class="primary-button run-button" type="button"><span>Run evaluation</span><span aria-hidden="true">↗</span></button>
 
         <div class="source-card">
-          <div><span class="source-icon">G</span><strong>Gong transcript analysis</strong></div>
-          <p id="sourceDescription">AI-assisted results with manual-audit status preserved.</p>
+          <div><span class="source-icon">N</span><strong>Nooks2 transcript analysis</strong></div>
+          <p id="sourceDescription">Question-level results with source coverage preserved.</p>
         </div>
       </aside>
 
@@ -112,7 +112,7 @@
 
         <div id="qualityBanner" class="quality-banner warning">
           <span class="quality-symbol" aria-hidden="true">!</span>
-          <div><strong>Question census pending</strong><p>Provisional punt examples are retained, but no percentage is shown until every knowledge-question moment is counted.</p></div>
+          <div><strong>Directional Nooks2 result</strong><p>Percentages reflect the substantive transcripts analyzed; coverage details remain visible.</p></div>
           <button id="qualityDetails" class="text-button" type="button">Why?</button>
         </div>
 
@@ -184,12 +184,12 @@
   <dialog id="qualityDialog">
     <form method="dialog">
       <div class="dialog-head"><div><p class="eyebrow">DATA QUALITY</p><h2>Why this result is directional</h2></div><button class="close-button" value="close" aria-label="Close">×</button></div>
-      <p class="dialog-copy">Question-level results require a census of every company-knowledge question, including confidently answered questions. Any semantic search that retrieves only punt examples will inflate the rate, so the denominator must be independently counted and auditable.</p>
+      <p class="dialog-copy">Question-level results require both confidently answered and deferred company-knowledge questions. Nooks2 was used to identify transcript-bearing records and analyze substantive external conversations; the displayed rates remain directional where short, non-conversational, missing, or truncated transcripts were not reviewable.</p>
       <ul class="check-list">
         <li><span>✓</span> External-only customer-call filter applied</li>
         <li><span>✓</span> Ten specified employee participants included</li>
-        <li><span>✓</span> Obvious non-deferrals removed from numerator</li>
-        <li><span>○</span> Every knowledge-question moment independently counted</li>
+        <li><span>✓</span> Strict later-answer rule applied to the numerator</li>
+        <li><span>○</span> Missing and low-signal transcripts remain a coverage limitation</li>
       </ul>
       <button class="primary-button" id="qualityImportButton" value="close">Import reviewed results</button>
     </form>

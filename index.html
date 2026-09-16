@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Measure company-knowledge questions and deferred answers in customer calls." />
+  <title>Technical Copilot · Signal Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Technical Copilot Signal Lab home">
+      <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span>TECHNICAL COPILOT</span>
+      <span class="brand-sub">SIGNAL LAB</span>
+    </a>
+    <div class="topbar-actions">
+      <span class="privacy-note"><span class="privacy-dot"></span>Runs locally in your browser</span>
+      <button class="ghost-button" id="methodButton" type="button">Metric definition</button>
+      <button class="primary-button compact" id="importButton" type="button">Import results</button>
+      <input id="fileInput" type="file" accept=".json,.csv" hidden />
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">FEATURE VALIDATION / CI-303</p>
+        <h1>Are reps getting unstuck<br /><em>in the moment?</em></h1>
+      </div>
+      <p class="hero-copy">Track what percentage of customer knowledge-question moments end in a “let me get back to you”—question by question, not call by call.</p>
+    </section>
+
+    <section class="workspace">
+      <aside class="control-panel" aria-label="Analysis controls">
+        <div class="panel-heading">
+          <span>Evaluation setup</span>
+          <button id="resetButton" class="text-button" type="button">Reset</button>
+        </div>
+
+        <label class="field full-field">
+          <span>Dataset</span>
+          <select id="datasetSelect" aria-label="Dataset"></select>
+        </label>
+
+        <div class="field-pair">
+          <label class="field">
+            <span>Start date</span>
+            <input id="startDate" type="date" />
+          </label>
+          <label class="field">
+            <span>End date</span>
+            <input id="endDate" type="date" />
+          </label>
+        </div>
+
+        <div class="field full-field">
+          <span>Users <small id="userCount"></small></span>
+          <div class="select-row">
+            <button id="selectAllUsers" class="text-button" type="button">Select all</button>
+            <button id="clearUsers" class="text-button muted" type="button">Clear</button>
+          </div>
+          <div id="userList" class="user-list"></div>
+        </div>
+
+        <fieldset class="field full-field category-fieldset">
+          <legend>Company-knowledge scope</legend>
+          <label><input type="checkbox" value="technical" checked />Technical / nuanced product</label>
+          <label><input type="checkbox" value="troubleshooting" checked />Troubleshooting / unexpected</label>
+          <label><input type="checkbox" value="integrations" checked />CRM / SEP / data integrations</label>
+          <label><input type="checkbox" value="telephony" checked />Dialer / calling / phone numbers</label>
+        </fieldset>
+
+        <label class="field full-field">
+          <span>External domains excluded</span>
+          <input id="domains" type="text" value="nooks.ai, nooks.in" />
+        </label>
+
+        <label class="toggle-row">
+          <span>
+            <strong>Strict punt rule</strong>
+            <small>Requires a later-answer commitment</small>
+          </span>
+          <input id="strictToggle" type="checkbox" checked />
+          <span class="toggle" aria-hidden="true"></span>
+        </label>
+
+        <button id="runButton" class="primary-button run-button" type="button"><span>Run evaluation</span><span aria-hidden="true">↗</span></button>
+
+        <div class="source-card">
+          <div><span class="source-icon">G</span><strong>Gong transcript analysis</strong></div>
+          <p id="sourceDescription">AI-assisted results with manual-audit status preserved.</p>
+        </div>
+      </aside>
+
+      <section class="results" aria-live="polite">
+        <div class="result-head">
+          <div>
+            <p class="eyebrow">CURRENT VIEW</p>
+            <h2 id="periodTitle">May–July baseline</h2>
+            <p id="periodSubtitle">May 1–July 31, 2026 · 10 users</p>
+          </div>
+          <div class="result-actions">
+            <button class="ghost-button" id="copyConfigButton" type="button">Copy config</button>
+            <button class="ghost-button" id="exportButton" type="button">Export CSV</button>
+          </div>
+        </div>
+
+        <div id="qualityBanner" class="quality-banner warning">
+          <span class="quality-symbol" aria-hidden="true">!</span>
+          <div><strong>Question census pending</strong><p>Provisional punt examples are retained, but no percentage is shown until every knowledge-question moment is counted.</p></div>
+          <button id="qualityDetails" class="text-button" type="button">Why?</button>
+        </div>
+
+        <div class="metric-grid">
+          <article class="metric-card accent">
+            <div class="metric-label">Company-knowledge questions punted</div>
+            <div class="metric-value" id="rateValue">—</div>
+            <div class="metric-foot"><span id="rateDelta">Baseline</span><span class="spark" id="rateSpark" aria-hidden="true"></span></div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">Company-knowledge questions</div>
+            <div class="metric-value" id="questionMomentsValue">—</div>
+            <div class="metric-foot"><span id="questionMomentsFoot">across 2,118 calls searched</span></div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">Punted question moments</div>
+            <div class="metric-value" id="puntMomentsValue">—</div>
+            <div class="metric-foot"><span id="puntedQuestionsFoot">Strict later-answer rule</span></div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">Answered in the moment</div>
+            <div class="metric-value" id="answeredShareValue">—</div>
+            <div class="metric-foot"><span>Complement of the punt rate</span></div>
+          </article>
+        </div>
+
+        <section class="chart-section">
+          <div class="section-heading">
+            <div><p class="eyebrow">BY USER</p><h3>Percentage of knowledge questions punted</h3></div>
+            <div class="chart-legend"><span><i class="legend-current"></i>Selected period</span><span><i class="legend-compare"></i>Comparison</span></div>
+          </div>
+          <div id="barChart" class="bar-chart" role="img" aria-label="Percentage of company-knowledge question moments punted by user"></div>
+        </section>
+
+        <section class="table-section">
+          <div class="section-heading table-heading">
+            <div><p class="eyebrow">DETAIL</p><h3>User breakdown</h3></div>
+            <label class="compare-control"><span>Compare with</span><select id="compareSelect"></select></label>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>User</th><th>Knowledge questions <span class="info" title="Distinct external company-knowledge question moments">i</span></th><th>Punted questions</th><th>Answered in moment</th><th>Punt rate</th><th>Δ vs compare</th></tr></thead>
+              <tbody id="resultsBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="definition-strip">
+          <div class="formula"><span>PRIMARY METRIC</span><strong><b>Punted company-knowledge question moments</b><i>÷</i><b>All company-knowledge question moments</b></strong></div>
+          <p>Each distinct question is one observation. Calls may contribute zero, one, or many questions.</p>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <dialog id="methodDialog">
+    <form method="dialog">
+      <div class="dialog-head"><div><p class="eyebrow">MEASUREMENT CONTRACT</p><h2>What counts—and what doesn’t</h2></div><button class="close-button" value="close" aria-label="Close">×</button></div>
+      <div class="definition-grid">
+        <div><span class="definition-number">01</span><h3>Question moment</h3><p>One distinct external technical, nuanced product, troubleshooting, integration, dialer, caller, or phone-number question. A call can contain multiple moments.</p></div>
+        <div><span class="definition-number">02</span><h3>Punted moment</h3><p>The Nooks employee indicates the answer will come later: checking, investigating, asking someone, following up, or circling back.</p></div>
+        <div><span class="definition-number">03</span><h3>Strict exclusions</h3><p>Scheduling, commercial next steps, collateral, confident answers, or “I don’t know” without a later-answer commitment do not count.</p></div>
+        <div><span class="definition-number">04</span><h3>Attribution</h3><p>Each moment belongs only to the employee who deferred. The same moment is not duplicated when multiple selected employees join the call.</p></div>
+      </div>
+      <div class="dialog-note"><strong>Recommended success read:</strong> A falling punt percentage indicates improvement only when transcript coverage and the distribution of question categories remain stable.</div>
+    </form>
+  </dialog>
+
+  <dialog id="qualityDialog">
+    <form method="dialog">
+      <div class="dialog-head"><div><p class="eyebrow">DATA QUALITY</p><h2>Why this result is directional</h2></div><button class="close-button" value="close" aria-label="Close">×</button></div>
+      <p class="dialog-copy">Question-level results require a census of every company-knowledge question, including confidently answered questions. Any semantic search that retrieves only punt examples will inflate the rate, so the denominator must be independently counted and auditable.</p>
+      <ul class="check-list">
+        <li><span>✓</span> External-only customer-call filter applied</li>
+        <li><span>✓</span> Ten specified employee participants included</li>
+        <li><span>✓</span> Obvious non-deferrals removed from numerator</li>
+        <li><span>○</span> Every knowledge-question moment independently counted</li>
+      </ul>
+      <button class="primary-button" id="qualityImportButton" value="close">Import reviewed results</button>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
